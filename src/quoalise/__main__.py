@@ -7,8 +7,7 @@ from xml.dom import minidom
 import xml.etree.ElementTree as ET
 
 from .client import Client
-from .utils import parse_iso_date
-from .data import Record
+from .utils import parse_iso_date, serialize
 from .errors import NotAuthorized, ServiceUnavailable
 
 
@@ -91,13 +90,6 @@ def get_records(
         print(minidom.parseString(ET.tostring(data.xml)).toprettyxml(indent="  "))
 
     elif format == "json":
-
-        def serialize(obj):
-            if isinstance(obj, (dt.datetime, dt.date)):
-                return obj.isoformat()
-            if isinstance(obj, Record):
-                return obj.__dict__
-            return str(obj)
 
         print(
             json.dumps(
