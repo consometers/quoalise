@@ -12,7 +12,6 @@ from typing import (
 )
 from types import TracebackType
 import datetime as dt
-from xmlrpc.client import boolean
 
 import slixmpp
 from slixmpp.xmlstream import tostring
@@ -25,11 +24,11 @@ import asyncio
 from .errors import (
     NotAuthorized,
     ServiceUnavailable,
-    ConnectionFailed,
     BadRequest,
     UpstreamError,
 )
 from .data import Data
+from .xmpp_utils import _wait_for_session_start
 
 
 class IqErrorConverter:
@@ -223,61 +222,9 @@ class ClientAsync:
           subscription records, use a negative value when polling records.
         """
         xmpp_client = slixmpp.ClientXMPP(client_jid, client_password)
+
         xmpp_client.connect(address=address)
-
-        session_state: asyncio.Future[boolean] = asyncio.Future()
-        error = None
-
-        def session_start_waiter(event_data: Any) -> None:
-            if not session_state.done():
-                session_state.set_result(True)
-
-        def session_end_handler(event_data: Any) -> None:
-            if not session_state.done():
-                nonlocal error
-                error = ConnectionFailed("XMPP server ended the session")
-                session_state.set_result(False)
-
-        def connection_failed_handler(event_data: Any) -> None:
-            if not session_state.done():
-                nonlocal error
-                error = ConnectionFailed(f"XMPP server is not reachable, {event_data}")
-                session_state.set_result(False)
-
-        def failed_auth_handler(event_data: Any) -> None:
-            if not session_state.done():
-                nonlocal error
-                error = ConnectionFailed("Invalid username or password")
-                session_state.set_result(False)
-
-        xmpp_client.add_event_handler(
-            "session_start",
-            session_start_waiter,
-            disposable=True,
-        )
-
-        xmpp_client.add_event_handler(
-            "session_end",
-            session_end_handler,
-            disposable=True,
-        )
-
-        xmpp_client.add_event_handler(
-            "connection_failed",
-            connection_failed_handler,
-            disposable=True,
-        )
-
-        xmpp_client.add_event_handler(
-            "failed_auth",
-            failed_auth_handler,
-            disposable=True,
-        )
-
-        await asyncio.wait_for(session_state, 10)
-
-        if error:
-            raise error
+        await _wait_for_session_start(xmpp_client)
 
         client = cls(xmpp_client)
 
