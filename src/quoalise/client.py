@@ -223,6 +223,14 @@ class ClientAsync:
         """
         xmpp_client = slixmpp.ClientXMPP(client_jid, client_password)
 
+        # XEP-0199 XMPP Ping
+        # Given that XMPP is based on TCP connections, it is possible for the
+        # underlying connection to be terminated without the application’s
+        # awareness. Ping stanzas provide an alternative to whitespace based
+        # keepalive methods for detecting lost connections.
+        # Mainly useful when listening for data here
+        xmpp_client.register_plugin("xep_0199", {"keepalive": True, "frequency": 15})
+
         xmpp_client.connect(address=address)
         await _wait_for_session_start(xmpp_client)
 
