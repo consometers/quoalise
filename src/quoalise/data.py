@@ -114,7 +114,7 @@ class Sensml:
                     elem.attrib.pop("n", None)
 
         if base_time:
-            base_timestamp = Sensml.timestamp(base_time)
+            base_timestamp = int(Sensml.timestamp(base_time))
             first = True
             for record, elem in self.__records_with_elements():
                 assert record.time is not None
@@ -124,8 +124,8 @@ class Sensml:
                 else:
                     elem.attrib.pop("bt", None)
                 time = Sensml.timestamp(record.time)
-                time = time - base_timestamp
-                if time:
+                time = round(time - base_timestamp, 1)
+                if time != 0.0:
                     elem.attrib["t"] = str(time)
                 else:
                     elem.attrib.pop("t", None)
