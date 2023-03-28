@@ -7,7 +7,7 @@
 Install dependencies:
 
 ```
-sudo apt install python3-slixmpp
+sudo apt install python3-slixmpp python3-tz python3-typing-extensions
 ```
 
 The `quoalise` command can be run from the Python module:
