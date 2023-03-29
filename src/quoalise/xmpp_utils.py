@@ -42,31 +42,29 @@ async def _wait_for_session_start(xmpp_client: slixmpp.ClientXMPP) -> None:
             error = ConnectionFailed("Invalid username or password")
             session_state.set_result(False)
 
-    xmpp_client.add_event_handler(
-        "session_start",
-        session_start_waiter,
-        disposable=True,
-    )
+    handlers = {
+        "session_start": session_start_waiter,
+        "session_end": session_end_handler,
+        "connection_failed": connection_failed_handler,
+        "failed_auth": failed_auth_handler,
+    }
 
-    xmpp_client.add_event_handler(
-        "session_end",
-        session_end_handler,
-        disposable=True,
-    )
+    try:
+        for event_name, pointer in handlers.items():
+            xmpp_client.add_event_handler(
+                event_name,
+                pointer,
+                disposable=True,
+            )
 
-    xmpp_client.add_event_handler(
-        "connection_failed",
-        connection_failed_handler,
-        disposable=True,
-    )
+        await asyncio.wait_for(session_state, 10)
 
-    xmpp_client.add_event_handler(
-        "failed_auth",
-        failed_auth_handler,
-        disposable=True,
-    )
+        if error:
+            raise error
 
-    await asyncio.wait_for(session_state, 10)
-
-    if error:
-        raise error
+    finally:
+        for event_name, pointer in handlers.items():
+            xmpp_client.del_event_handler(
+                event_name,
+                pointer,
+            )
