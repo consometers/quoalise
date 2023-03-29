@@ -14,6 +14,7 @@ from typing_extensions import (
 )
 from types import TracebackType
 import datetime as dt
+import logging
 
 import slixmpp
 from slixmpp.xmlstream import tostring
@@ -74,6 +75,10 @@ class ClientAsync:
     def __init__(self, xmpp_client: slixmpp.ClientXMPP):
         self.xmpp_client = xmpp_client
         self.incoming_data: asyncio.Queue[Data] = asyncio.Queue()
+        self.xmpp_client.add_event_handler(
+            "disconnected",
+            self.__reconnect,
+        )
 
     async def get_history(
         self,
@@ -258,6 +263,17 @@ class ClientAsync:
         # Avoids « Task was destroyed but it is pending! » when closing the event loop,
         # might not be needed in future versions
         # self.xmpp_client._run_out_filters.cancel()
+
+    async def __reconnect(self, event_data: Any) -> None:
+        while True:
+            logging.info("Reconnecting…")
+            await asyncio.sleep(5.0)
+            self.xmpp_client.connect()  # TODO repeated without using the same address
+            try:
+                await _wait_for_session_start(self.xmpp_client)
+                return
+            except Exception as e:
+                logging.error(f"Reconnection failed: {e}")
 
     async def handle_message_data(self, message: slixmpp.Message) -> None:
         data = message.xml.find("{urn:quoalise:0}quoalise/{urn:quoalise:0}data")
