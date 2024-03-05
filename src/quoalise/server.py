@@ -3,6 +3,7 @@ from typing import (
     Optional,
     Type,
     Literal,
+    Any
 )
 from types import TracebackType
 from abc import ABC, abstractmethod
@@ -92,6 +93,10 @@ class CommandHandler(ABC):
 class ServerAsync:
     def __init__(self, xmpp_client: slixmpp.ClientXMPP):
         self.xmpp_client = xmpp_client
+        self.xmpp_client.add_event_handler(
+            "disconnected",
+            self.__reconnect,
+        )
 
     @classmethod
     async def connect(
@@ -128,6 +133,16 @@ class ServerAsync:
             handler=handler.handle_request,
         )
 
+    async def __reconnect(self, event_data: Any) -> None:
+        while True:
+            logging.info("Reconnecting…")
+            await asyncio.sleep(5.0)
+            self.xmpp_client.connect() # TODO repeated without using the same address
+            try:
+                await _wait_for_session_start(self.xmpp_client)
+                return
+            except Exception as e:
+                logging.error(f"Reconnection failed: {e}")
 
 class GetHistoryHandler(CommandHandler):
     def __init__(self):
