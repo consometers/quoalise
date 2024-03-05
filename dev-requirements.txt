@@ -3,5 +3,4 @@ black
 pre-commit
 wheel
 mypy
-types-pytz
 types-setuptools

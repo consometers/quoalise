@@ -11,7 +11,7 @@ from slixmpp.jid import JID
 from slixmpp.plugins.xep_0004.stanza import Form
 from slixmpp.exceptions import XMPPError
 import datetime as dt
-import pytz
+import zoneinfo
 
 from .xmpp_utils import _wait_for_session_start
 
@@ -146,7 +146,7 @@ class GetHistoryHandler(CommandHandler):
             value=self.default_identifier(),
         )
 
-        end_time = dt.datetime.now(pytz.timezone("Europe/Paris")).replace(
+        end_time = dt.datetime.now(zoneinfo.ZoneInfo("Europe/Paris")).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
         start_time = end_time - dt.timedelta(days=1)

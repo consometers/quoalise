@@ -3,7 +3,7 @@ import os
 import argparse
 import logging
 import datetime as dt
-import pytz
+import zoneinfo
 from typing import Iterable
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
@@ -52,7 +52,7 @@ def cli() -> int:
         logging.basicConfig(level=logging.DEBUG)
 
     if args.tz is not None:
-        args.tz = pytz.timezone(args.tz)
+        args.tz = zoneinfo.ZoneInfo(args.tz)
 
     quoalise_user = os.environ.get("QUOALISE_USER")
     quoalise_password = os.environ.get("QUOALISE_PASSWORD")

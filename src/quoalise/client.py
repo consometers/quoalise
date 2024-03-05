@@ -8,8 +8,6 @@ from typing import (
     Tuple,
     Optional,
     Type,
-)
-from typing_extensions import (
     Literal,
 )
 from types import TracebackType

@@ -5,7 +5,7 @@ import sys
 import argparse
 import csv
 import datetime as dt
-import pytz
+import zoneinfo
 
 import quoalise
 
@@ -37,14 +37,10 @@ if quoalise_user is None or quoalise_password is None:
     )
 
 # Last available record from history is yesterday at midnight, french time
-paris_tz = pytz.timezone("Europe/Paris")
-end_time = paris_tz.localize(dt.datetime.now()).replace(
-    hour=0, minute=0, second=0, microsecond=0
-)
+paris_tz = zoneinfo.ZoneInfo("Europe/Paris")
+end_time = dt.datetime.now(paris_tz).replace(hour=0, minute=0, second=0, microsecond=0)
 
-# pytz provices normalize() to keep timezone consistent
-# when crossing daylight saving time
-start_time = paris_tz.normalize(end_time - dt.timedelta(days=7))
+start_time = end_time - dt.timedelta(days=7)
 
 client = quoalise.Client.connect(quoalise_user, quoalise_password)
 data = client.get_history(args.server_jid, args.data_id, start_time, end_time)

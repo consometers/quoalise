@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Union, Optional, Iterable, Tuple, Dict, List, Any
 import datetime as dt
 from slixmpp.xmlstream import ET
-import pytz
+import zoneinfo
 import json
 
 #
@@ -40,7 +40,7 @@ class Sensml:
         assert (
             time.tzinfo is not None
         ), "Naive datetimes are not handled to prevent errors"
-        return time.astimezone(pytz.utc).timestamp()
+        return time.astimezone(zoneinfo.ZoneInfo("UTC")).timestamp()
 
     def append(self, record: Record) -> None:
 
@@ -163,7 +163,7 @@ class Sensml:
                 time = base_time + time if time is not None else base_time
             if time is not None:
                 time = dt.datetime.utcfromtimestamp(time)
-                time = pytz.utc.localize(time)
+                time = time.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
 
             unit = elem.attrib.get("u", None)
             if base_unit is not None:
